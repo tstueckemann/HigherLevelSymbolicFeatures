@@ -1,0 +1,6 @@
+features/*
+logs/*
+plots/*
+results/*
+saves/*
+__pycache__
