@@ -1,0 +1,119 @@
+seml:
+  executable: modelTrainFeatures.py
+  name: modelTrainFeatures
+  output_dir: logs
+  project_root_dir: .
+
+slurm:
+  - experiments_per_job: 4
+    max_simultaneous_jobs: 1  # Restrict number of simultaneously running jobs per job array
+    sbatch_options:
+      gres: gpu:1       # num GPUs 
+      mem: 20G          # memory TODO CHANGED 200 -> 20
+      cpus-per-task: 4  # num cores TODO CHANGED from 64 -> 32
+      time: 1-08:00     # max time, D-HH:MM
+
+fixed:
+  init.nrFolds: 5
+  init.patience: 70
+  init.seed_value: 56
+  model.batchSize: 100
+  model.useSaves: False # dont calculate already calculated model runs
+  model.skipDebugSaves: True # reduces the saved amount of data
+  model.saveWeights: False # save model weights or not
+  # model.dropOutRate: 0.3
+
+  data.dataset: ucr
+  data.takename: False #If True, take UTC names rather than numbers
+  data.saveMethod: pickle
+  data.limit: 700
+
+  model.numEpochs: 500
+
+grid:
+
+  # possible datasets
+  data.number:
+    type: range
+    min: 0
+    max: 128
+    step: 1
+
+  model.numOfAttentionLayers: 
+    type: choice
+    options: 
+      - 3
+
+  model.header: 
+    type: choice
+    options:
+      - 4
+  
+  model.dropOutRate:
+    type: choice
+    options:
+      - 0.0
+
+  model.lr:
+    type: choice
+    options:
+      - custom
+
+  model.warmup:
+    type: choice
+    options:
+      - 10000
+
+  data.method:
+    type: choice
+    options:
+      - SAX
+      - MCB 
+      - TSFRESH_SYM
+      - TSFRESH_SEL_SYM
+      - TSFEL_SYM
+      - CATCH22_SYM
+      - CATCH24_SYM
+      - TSFEAT_SYM
+      - TOOLS_SYM
+
+  model.symbolCount:
+    type: choice
+    options:
+      - 5
+      - 6
+
+  model.strategy:
+    type: choice
+    options:
+      - uniform
+      - quantile
+
+  model.architecture:
+    type: choice
+    options:
+      - transformer
+
+# Different Model architectures
+smallModel:
+  grid:
+    model.dmodel:
+      type: choice
+      options:
+        - 32
+    model.dff:
+      type: choice
+      options:
+        - 16
+
+bigModel:
+  grid:
+    model.dmodel:
+      type: choice
+      options:
+        - 128
+
+    model.dff:
+      type: choice
+      options:
+        - 64
