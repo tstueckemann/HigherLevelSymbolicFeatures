@@ -28,7 +28,7 @@ You can run single experimentes by using the test.ipynb notebook or run multiple
 
 #### Just for testing
 
-1. Go to test.ipynb
+1. Go to `test.ipynb`
 2. Change parameters
 3. Run the cell
 
