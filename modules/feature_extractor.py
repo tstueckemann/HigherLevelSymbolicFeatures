@@ -246,7 +246,7 @@ def save_foldwise_features(number, dataName, method, x_train, X_test, y_train, y
 
         elif doTOOLS:
             extracted_features_train1 = helper.get_featuretools_features(x_train1)
-            extracted_features_train1 = helper.postprocess_featuretools(extracted_features_train1, remove_constant_columns=False)
+            extracted_features_train1 = helper.postprocess_featuretools(extracted_features_train1, remove_constant_columns=True)
             x_train1 = extracted_features_train1.to_numpy()
 
             extracted_features_val = helper.get_featuretools_features(x_val)
