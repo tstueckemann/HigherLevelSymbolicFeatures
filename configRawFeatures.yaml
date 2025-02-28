@@ -35,13 +35,10 @@ grid:
 
   # possible datasets
   data.number:
-    # type: range
-    # min: 0
-    # max: 128
-    # step: 1
-    type: choice
-    options:
-      - 1
+    type: range
+    min: 0
+    max: 128
+    step: 1
 
   model.numOfAttentionLayers: 
     type: choice
