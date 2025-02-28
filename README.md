@@ -15,12 +15,12 @@ Use the environment.yaml file to create a conda environment:
 conda env create -f environment.yaml
 
 ### Files
-* modelTrainFeatures.py is the code that will be executed by the SEML experiments, it consists of the feature extraction, symbolization and the training of our models
-* config*.yaml are the files that consist of our training parameters, including the datasets, methods and model architectures that are used for our SEML experiments
-* test.ipynb is a notebook that can be used for easy testing of single experiments
-* evaluate.py consists of useful functions for the evaluation of our eperiments
-* plotter.py consists of the functions to create the plots presented in the paper
-* In the modules folder, you can find the modules, including the feature extractors, the transformer and the resnet model
+* `modelTrainFeatures.py` is the code that will be executed by the SEML experiments, it consists of the feature extraction, symbolization and the training of our models
+* `config*.yaml` are the files that consist of our training parameters, including the datasets, methods and model architectures that are used for our SEML experiments
+* `test.ipynb` is a notebook that can be used for easy testing of single experiments
+* `evaluate.py` consists of useful functions for the evaluation of our eperiments
+* `plotter.py` consists of the functions to create the plots presented in the paper
+* In the `modules` folder, you can find the modules, including the feature extractors, the transformer and the resnet model
   
 ### How to run
 
