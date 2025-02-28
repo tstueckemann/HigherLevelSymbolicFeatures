@@ -32,7 +32,6 @@ grid:
 
   # possible datasets
   data.number:
-    data.number:
     # type: range
     # min: 0
     # max: 128
