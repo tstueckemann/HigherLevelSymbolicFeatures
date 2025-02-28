@@ -1,6 +1,7 @@
 import tensorflow as tf
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, Flatten, Dense, Conv1D
+
+from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, Flatten, Dense
 
 class ResidualBlock(tf.keras.layers.Layer):
     """ The Residual block of ResNet models. """

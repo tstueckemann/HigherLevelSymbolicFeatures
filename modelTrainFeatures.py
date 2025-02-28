@@ -16,7 +16,6 @@ from modules import helper
 from modules import dataset_selecter as ds
 from modules import modelCreator
 from modules import feature_extractor as fe
-from modules import shapeletTransform
 
 from datetime import datetime
 
@@ -154,12 +153,14 @@ class ExperimentWrapper:
         current_time = now.strftime("%H:%M:%S")
         print("Current Time =", current_time)
 
-    # one experiment run with a certain config set. MOST OF THE IMPORTANT STUFF IS DONE HERE!!!!!!!
+    # one experiment run with a certain config set.
     @ex.capture(prefix="model")
-    def trainExperiment(self, numEpochs: int, batchSize: int, useSaves: bool, skipDebugSaves: bool, saveWeights: bool,
-        dropOutRate: float, symbolCount: int, dmodel: int, dff: int, header: int, numOfAttentionLayers: int, strategy, lr, warmup, ncoef=None,
-        minShapeletLength=None, shapeletTimeLimit=None,
-        architecture='transformer', num_resblocks=None, num_channels=None, use_1x1conv=None):
+    def trainExperiment(self, numEpochs: int, batchSize: int, skipDebugSaves: bool, saveWeights: bool,
+        architecture='transformer', symbolCount=0,
+        numOfAttentionLayers=None, header=None, dmodel=None, dff=None, 
+        num_resblocks=None, num_channels=None, use_1x1conv=None,
+        lr=None, warmup=None, 
+        dropOutRate=None, strategy=None, ncoef=None):
 
         print("GPU is", "available" if tf.config.list_physical_devices("GPU") else "NOT AVAILABLE")
         print('Dataname:')
@@ -186,23 +187,6 @@ class ExperimentWrapper:
         else:
             ncoefI = None
             coef_div = None
-
-        #if you know which configs already finished you can activate this
-        if False and not os.path.isfile(wname + '.pkl'):
-            fullResults["Error"] = "dataset " + self.dataName + " not included: " + str(self.seqSize) + "; name: " + wname
-            print('Not included ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-            print("dataset " + self.dataName + " not included: " + str(self.seqSize) + "; name: " + wname)
-
-            return "dataset " + self.dataName + " not included " + str(self.seqSize)  + "; name: " + wname #fullResults
-        
-        #don't recalculate already finished experiments
-        wname = modelCreator.getWeightName(self.number, self.dataName, 0, symbolCount, numOfAttentionLayers, "results", header, dmodel=dmodel, dff=dff, doDetails=True, learning = False, results = True, resultsPath = 'results', posthoc=ncoefI)
-        if os.path.isfile(wname + '.pkl'):
-            fullResults["Error"] = "dataset " + self.dataName + " already done: " + str(self.seqSize) + "; name: " + wname
-            print('Already Done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-            print("dataset " + self.dataName + " already done: " + str(self.seqSize) + "; name: " + wname)
-        
-            return "dataset " + self.dataName + "already done: " + str(self.seqSize)  + "; name: " + wname #fullResults
 
         #limit the lenght of the data
         if self.seqSize > self.limit:
@@ -235,38 +219,28 @@ class ExperimentWrapper:
                 continue 
             
             x_train1, x_val, x_test, y_train1, y_val, y_test, X_train_ori, X_val_ori, X_test_ori, y_trainy1, y_testy = modelCreator.preprocessData(x_train1, x_val, x_test, y_train1, y_val, y_test, 
-                                                                                                                                                y_trainy1, y_testy, self.fold, symbolCount, self.dataName, 
+                                                                                                                                                y_trainy1, y_testy, self.fold, symbolsCount=symbolCount, dataName=self.dataName, 
                                                                                                                                                 seqSize=self.seqSize,
-                                                                                                                                                useSaves = useSaves, 
                                                                                                                                                 strategy=strategy,
                                                                                                                                                 method=self.method,
                                                                                                                                                 ncoef=ncoefI, coef_div=coef_div)
-            if helper.do_shapelets(self.method):
-                if minShapeletLength < 1.0:
-                    sLen = int(len(x_train1[0]) * minShapeletLength)
-                else: 
-                    sLen = minShapeletLength
-                configString = "slen: " + str(minShapeletLength)
-                shapelets, baseline = shapeletTransform.trainShapelets(x_train1, y_train1, sLen, seed=self.seed_value, reduceTrainy=True, time_limit_in_minutes=shapeletTimeLimit)
-                results = shapeletTransform.evaluateShapelets(shapelets, x_test, y_testy, baseline) 
-                                        
-                if abstractionString not in fullResults.keys():
-                    fullResults[abstractionString] = dict()
-                if configString not in fullResults[abstractionString].keys():
-                    fullResults[abstractionString][configString] = []
-                fullResults[abstractionString][configString].append(results)
-
-                saveName = modelCreator.getWeightName(self.number, self.dataName, 0, symbolCount, abstractionType=self.method, learning=False, results=True, doHeaders=False,
-                                                        posthoc=ncoefI, doShapelets=True, minShapelets=minShapeletLength, timeLimit=shapeletTimeLimit, strategy=strategy)
-
-            else:
-                out = modelCreator.doAbstractedTraining(x_train1, x_val, x_test, y_train1, y_val, y_testy, batchSize, self.seed_value, self.num_of_classes, self.number, self.dataName, self.fold, symbolCount, numEpochs, 
-                                                            numOfAttentionLayers, dmodel, header, dff, skipDebugSaves=skipDebugSaves, patience = self.patience, useSaves=useSaves, saveWeights=saveWeights,
-                                                            abstractionType=abstractionString, rate=dropOutRate, lr=lr, warmup=warmup, 
-                                                            architecture=architecture, num_resblocks=num_resblocks, num_channels=num_channels, use_1x1conv=use_1x1conv)
-                self.fillOutDicWithNNOut(abstractionString, "results", fullResults, out)
-                saveName = modelCreator.getWeightName(self.number, self.dataName, 0, symbolCount, numOfAttentionLayers, self.method, header, dmodel=dmodel, dff=dff, doDetails=True, learning = False, results = True, posthoc=ncoefI, dropout=dropOutRate, strategy=strategy, 
-                                                      architecture=architecture, num_resblocks=num_resblocks, num_channels=num_channels, use_1x1conv=use_1x1conv)
+    
+            out = modelCreator.doAbstractedTraining(x_train1, x_val, x_test, y_train1, y_val, y_testy, 
+                                                    BATCH=batchSize, seed_value=self.seed_value, num_epochs=numEpochs, patience = self.patience, 
+                                                    num_of_classes=self.num_of_classes, number=self.number, dataName=self.dataName, fold=self.fold,
+                                                    architecture=architecture, symbolCount=symbolCount, 
+                                                    numOfAttentionLayers=numOfAttentionLayers,header=header, dmodel=dmodel, dff=dff, 
+                                                    num_resblocks=num_resblocks, num_channels=num_channels, use_1x1conv=use_1x1conv,
+                                                    abstractionType=abstractionString, rate=dropOutRate, lr=lr, warmup=warmup, 
+                                                    skipDebugSaves=skipDebugSaves, saveWeights=saveWeights)
+            self.fillOutDicWithNNOut(abstractionString, "results", fullResults, out)
+            
+            saveName = modelCreator.getWeightName(self.number, self.dataName, 0,
+                                                  learning = False, results = True,
+                                                  architecture=architecture, abstractionType=self.method, symbols=symbolCount,
+                                                  layers=numOfAttentionLayers, header=header, dmodel=dmodel, dff=dff,
+                                                  num_resblocks=num_resblocks, num_channels=num_channels, use_1x1conv=use_1x1conv,
+                                                  num_coef=ncoefI, dropout=dropOutRate, strategy=strategy)
 
             print("finished fold: " + str(self.fold))
 

@@ -1,46 +1,12 @@
 import numpy as np
 import itertools
 import pandas as pd
-import os
 
 import pickle
 import msgpack
 import msgpack_numpy as mnp
 
 import featuretools as ft
-import math
-
-def doCombiStep(step, field, axis) -> np.ndarray:
-    if(step == 'max'):
-        return np.max(field, axis=axis)
-    elif (step == 'sum'):
-        return np.sum(field, axis=axis)
-    
-def ce(data):
-    summer = 0
-    for i in range(len(data)-1):
-        summer += math.pow(data[i] - data[i+1], 2)
-    return math.sqrt(summer)
-
-def flatten(X, pos = -1):
-    """ Flatten a 3D np array """
-    flattened_X = np.empty((X.shape[0], X.shape[2]))  # sample x features array.
-    if pos == -1:
-        pos = X.shape[1]-1
-    for i in range(X.shape[0]):
-        flattened_X[i] = X[i, pos, :]
-    return(flattened_X)
-
-def scale(X, scaler):
-    """ Scale 3D array. X = 3D array, scalar = scale object from sklearn. Output = scaled 3D array. """
-    for i in range(X.shape[0]):
-        X[i, :, :] = scaler.transform(X[i, :, :])
-    return X
-
-def symbolize(X, scaler):
-    """ Symbolize a 3D array. X = 3D array, scalar = SAX symbolizer object. Output = symbolic 3D string array. """
-    X_s = scaler.transform(X)
-    return X_s
 
 def trans(val, vocab) -> float:
     """ Translate the a string [a,e] between [-1,1] """
@@ -49,14 +15,6 @@ def trans(val, vocab) -> float:
             halfSize = (len(vocab)-1)/2
             return (i - halfSize) / halfSize
     return -2
-
-def getMapValues(size):
-    """ Get the map values """
-    vMap = []
-    for i in range(size):
-        halfSize = (size-1)/2
-        vMap.append((i - halfSize) / halfSize)
-    return vMap
 
 def symbolizeTrans(X, scaler, sinfo, bins = 5):
     """ Symbolize and transform data """
@@ -70,25 +28,6 @@ def symbolizeTrans(X, scaler, sinfo, bins = 5):
         for j in range(X.shape[1]):
             X[i][j] = trans(X_s[i][j], vocab)
     return X
-
-def symbolizeTrans2(X, scaler, bins = 5):
-    """ Symbolize and transform data """
-    vocab = scaler._check_params(bins)
-    for i in range(X.shape[0]):
-        X_s = X.astype(str) 
-        z1 = scaler.transform(np.array([X[i, :, :][:,0]]))
-        X_s[i, :, :][:,0] = z1
-        for j in range(X.shape[1]):
-            X[i][j][0] = trans(X_s[i][j][0], vocab)
-    return X
-
-def split_dataframe(df, chunk_size = 10000): 
-    """ Split datafram into chunks """
-    chunks = list()
-    num_chunks = len(df) // chunk_size + 1
-    for i in range(num_chunks):
-        chunks.append(df[i*chunk_size:(i+1)*chunk_size])
-    return chunks
 
 def save_obj(obj, name, method='pickle'):
     """ Save an object """
@@ -110,18 +49,6 @@ def load_obj(name, method='pickle'):
     elif method == 'msgpack':
         with open(name + '.msgpack', 'rb') as f:
             return msgpack.unpackb(f.read(), object_hook=mnp.decode)
-    
-def truncate(n):
-    return int(n * 1000) / 1000
-
-
-def modelFidelity(modelPrediction, interpretationPrediction):
-    """ Calculate fidelity """
-    summer = 0
-    for i in range(len(modelPrediction)):
-        if modelPrediction[i] == interpretationPrediction[i]:
-            summer += 1
-    return summer / len(modelPrediction)
 
 def fillOutDicWithNNOutSmall(outData):
     """ Fill result dictionary with data """
@@ -266,15 +193,7 @@ def postprocess_featuretools(features, remove_constant_columns=False):
 
 def is_feature_extraction(method):
     """ Check if the method extracts features """
-    if method == 'ORI':
-        return False
-    elif method == 'SAX':
-        return False
-    elif method == 'SFA':
-        return False
-    elif method == 'MCB':
-        return False
-    elif method == 'TSFRESH':
+    if method == 'TSFRESH':
         return True
     elif method == 'TSFRESH_SEL':
         return True
@@ -307,43 +226,21 @@ def is_feature_extraction(method):
 
 def do_symbolize(method):
     """ Check if method needs to be symbolized further """
-    if method == 'ORI':
-        return False
-    elif method == 'SAX':
-        return False
-    elif method == 'SFA':
-        return False
-    elif method == 'MCB':
+    if method == 'MCB':
         return True
-    elif method == 'TSFRESH':
-        return False
-    elif method == 'TSFRESH_SEL':
-        return False
     elif method == 'TSFRESH_SYM':
         return True
     elif method == 'TSFRESH_SEL_SYM':
         return True
-    elif method == 'TSFEL':
-        return False
     elif method == 'TSFEL_SYM':
         return True
-    elif method == 'CATCH22':
-        return False
     elif method == 'CATCH22_SYM':
         return True
-    elif method == 'CATCH24':
-        return False
     elif method == 'CATCH24_SYM':
         return True
-    elif method == 'TSFEAT':
-        return False
     elif method == 'TSFEAT_SYM':
         return True
-    elif method == 'TOOLS':
-        return False
     elif method == 'TOOLS_SYM':
-        return True
-    elif method == 'SHAPE_MCB':
         return True
     
     return False
@@ -421,11 +318,6 @@ def set_method(method):
         calcTOOLS_SYM = True
 
     return calcTSF, calcTSF_SEL, calcTSF_SYM, calcTSF_SEL_SYM, calcFEL, calcFEL_SYM, calcC22, calcC22_SYM, calcC24, calcC24_SYM, calcTSFEAT, calcTSFEAT_SYM, calcTOOLS, calcTOOLS_SYM
-
-def do_shapelets(method):
-    """ Determine if shapelets are used """
-    if (method == 'SHAPE') or (method == 'SHAPE_MCB') or (method == 'SHAPE_SAX') or (method == 'SHAPE_SFA'):
-        return True
 
 def combine_factors(factors_list) -> list[dict]:
     """

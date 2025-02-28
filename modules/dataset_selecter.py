@@ -91,15 +91,6 @@ def doUCR(seed_value, number, takeName = True, retry=0, use_cache=True):
 
     return X_train, X_test, y_train, y_test, y_trainy, y_testy, seqSize, datasetName, num_of_classes, number
 
-def split_dataframe(df, chunk_size = 10000): 
-    """ split dataframe into chunks """
-    
-    chunks = list()
-    num_chunks = len(df) // chunk_size + 1
-    for i in range(num_chunks):
-        chunks.append(df[i*chunk_size:(i+1)*chunk_size])
-    return chunks
-
 def load_saved_dataset(seed_value=56, number='SyntheticControl'):   
     """ Load a dataset saved in datasets/ """
     datasetName = number

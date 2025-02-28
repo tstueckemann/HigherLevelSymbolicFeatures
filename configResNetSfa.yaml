@@ -9,8 +9,8 @@ slurm:
     max_simultaneous_jobs: 1  # Restrict number of simultaneously running jobs per job array
     sbatch_options:
       gres: gpu:1       # num GPUs 
-      mem: 20G          # memory TODO CHANGED 200 -> 20
-      cpus-per-task: 4  # num cores TODO CHANGED from 64 -> 32
+      mem: 20G          # memory 
+      cpus-per-task: 4  # num cores 
       time: 1-08:00     # max time, D-HH:MM
 
 fixed:
@@ -18,10 +18,9 @@ fixed:
   init.patience: 70
   init.seed_value: 56
   model.batchSize: 100
-  model.useSaves: False # dont calculate already calculated model runs
   model.skipDebugSaves: True # reduces the saved amount of data
   model.saveWeights: False # save model weights or not
-  model.dropOutRate: 0.3
+  model.dropOutRate: 0.0
 
   data.dataset: ucr
   data.takename: False #If True, take UTC names rather than numbers
@@ -30,21 +29,17 @@ fixed:
 
   model.numEpochs: 500
 
-  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  model.dmodel: 0
-  model.dff: 0
-  model.numOfAttentionLayers: 0
-  model.header: 0
-  model.warmup: 0
-
 grid:
 
   # possible datasets
   data.number:
-    type: range
-    min: 0
-    max: 128
-    step: 1
+    # type: range
+    # min: 0
+    # max: 128
+    # step: 1
+    type: choice
+    options:
+      - 1
 
   data.method:
     type: choice
